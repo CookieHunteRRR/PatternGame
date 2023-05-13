@@ -1,4 +1,5 @@
 ﻿using Pattern.Logic.Modules.Pattern;
+using Pattern.Logic.UI.Elements;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,18 +11,24 @@ namespace Pattern.Logic.UI
     /// <summary>
     /// Визуальная составляющая "ну вот этого 3х3 квадрата в котором паттерны вводить короче". Логика находится в Modules.Pattern.
     /// </summary>
-    internal class PatternBox : IDisplayable
+    internal class PatternBox : UIBox, IDisplayable
     {
-        private PatternManager manager;
+        public PatternManager PatternManager { get; private set; }
 
-        internal PatternBox()
+        internal PatternBox(int x, int y) : base(x, y)
         {
-            manager = new PatternManager();
+            PatternManager = new PatternManager(this);
         }
 
-        public void Display()
+        public new void Display()
         {
-            manager.DisplayAvailableCells();
+            //manager.DisplayAvailableCells();
+            foreach (var element in elements)
+            {
+                Console.SetCursorPosition(this.Position.X + element.Offset.X,
+                                          this.Position.Y + element.Offset.Y);
+                Console.Write("*");
+            }
         }
     }
 }

@@ -1,25 +1,20 @@
-﻿using Pattern.Logic.Modules;
+﻿using Pattern.Logic;
+using Pattern.Logic.Modules;
+using Pattern.Logic.UI;
 
 namespace Pattern
 {
     internal class Program
     {
-        private static InputManager InputManager { get; set; }
-
+        public static GameManager GameManager { get; private set; }
         // https://stackoverflow.com/questions/5435460/console-application-how-to-update-the-display-without-flicker
 
         static void Main(string[] args)
         {
-            InputManager = new InputManager();
-
             Console.OutputEncoding = System.Text.Encoding.Unicode;
-            Console.SetWindowSize(120, 30);
 
-            var box = new Logic.UI.PatternBox();
-
-            box.Display();
-
-            InputManager.HandleInput();
+            GameManager = new GameManager();
+            GameManager.StartGame();
         }
     }
 }
