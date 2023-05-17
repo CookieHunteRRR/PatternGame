@@ -15,13 +15,18 @@ namespace Pattern.Logic.UI
 
         public UIBox(int x, int y)
         {
-            elements= new List<UIBoxElement>();
+            elements = new List<UIBoxElement>();
             Position = new Position(x, y);
         }
 
         public void AddElement(UIBoxElement element)
         {
             elements.Add(element);
+        }
+
+        public virtual void InitialDisplay()
+        {
+
         }
 
         public void Display()

@@ -11,7 +11,7 @@ namespace Pattern.Logic.Modules.Pattern
     internal class Cell
     {
         public CellElement Element { get; private set; }
-        private int value;
+        public int Value { get; set; }
         //private DirectionInfo[] defaultDirections;
 
         public bool IsStartingPoint { get; set; }
@@ -49,13 +49,13 @@ namespace Pattern.Logic.Modules.Pattern
                     patBoxPos.Y + selCellOff.Y);
         }*/
 
-        internal Position GetConsolePosition()
+        internal (int X, int Y) GetConsolePosition()
         {
-            var patBoxPos = Program.GameManager.PatternBox.Position;
+            var patBoxPos = Program.GameManager.UIManager.PatternBox.Position;
             var selCellOff = Element.Offset;
 
-            return new Position(patBoxPos.X + selCellOff.X,
-                                patBoxPos.Y + selCellOff.Y);
+            return (patBoxPos.X + selCellOff.X,
+                    patBoxPos.Y + selCellOff.Y);
         }
 
         /*public void RestoreDefaultValues()
@@ -69,7 +69,18 @@ namespace Pattern.Logic.Modules.Pattern
 
         public override string ToString()
         {
-            return $"{value}";
+            return $"{Value}";
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is Cell)
+            {
+                Cell cell = (Cell)obj;
+                if (cell.Value == this.Value) return true;
+                else return false;
+            }
+            return false;
         }
     }
 }

@@ -11,18 +11,17 @@ namespace Pattern.Logic
     internal class GameManager
     {
         public InputManager InputManager { get; private set; }
-        public PatternBox PatternBox { get; private set; }
+        public UIManager UIManager { get; private set; }
         
         public GameManager()
         {
             InputManager = new InputManager();
+            UIManager = new UIManager();
         }
 
         public void StartGame()
         {
-            PatternBox = new PatternBox(0, 0);
-            PatternBox.Display();
-
+            UIManager.CreateUI();
             InputManager.HandleInput();
         }
     }

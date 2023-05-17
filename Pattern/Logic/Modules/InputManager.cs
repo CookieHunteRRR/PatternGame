@@ -12,10 +12,11 @@ namespace Pattern.Logic.Modules
 
         public void HandleInput()
         {
-            var patternManager = Program.GameManager.PatternBox.PatternManager;
+            var uiManager = Program.GameManager.UIManager;
+            var patternManager = uiManager.PatternBox.PatternManager;
 
-            var cursorPos = patternManager.SelectedCell.GetConsolePosition();
-            Console.SetCursorPosition(cursorPos.Y, cursorPos.Y);
+            /*var cursorPos = patternManager.SelectedCell.GetConsolePosition();
+            Console.SetCursorPosition(cursorPos.X, cursorPos.Y);*/
             while (_isRunning)
             {
                 var input = Console.ReadKey(true);
@@ -27,12 +28,24 @@ namespace Pattern.Logic.Modules
                     case ConsoleKey.DownArrow:
                         patternManager.TryMoveTo(input.Key);
                         break;
+                    case ConsoleKey.Enter:
+                        if (patternManager.PatternBuilder is null)
+                        {
+                            patternManager.EnterEditMode();
+                        }
+                        else patternManager.ExitEditMode(true);
+                        break;
+                    case ConsoleKey.Backspace:
+                        if (patternManager.PatternBuilder is not null)
+                            patternManager.ExitEditMode(false);
+                        break;
                     case ConsoleKey.Escape:
                         _isRunning = false;
                         break;
                     default:
                         break;
                 }
+                uiManager.UpdateUI();
             }
         }
     }

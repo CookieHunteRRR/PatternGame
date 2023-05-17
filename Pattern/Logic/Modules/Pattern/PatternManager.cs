@@ -20,6 +20,9 @@ namespace Pattern.Logic.Modules.Pattern
         private Dictionary<(int X, int Y), Cell> cellMap;
         private int stepBetweenCells = 2; // количество рядов/столбцов между двумя клетками
 
+        public PatternBuilder? PatternBuilder { get; private set; }
+        public HashSet<Cell> UsedCells { get; private set; }
+        public List<PatternCommand> RegisteredConnections { get; private set; }
         public Cell SelectedCell { get; set; }
 
         internal PatternManager(PatternBox box)
@@ -27,11 +30,78 @@ namespace Pattern.Logic.Modules.Pattern
             patternBox = box;
             cellMap = new Dictionary<(int X, int Y), Cell>();
 
+            UsedCells = new HashSet<Cell>();
+            RegisteredConnections = new List<PatternCommand>();
+
             GenerateCells();
+        }
+
+        internal void EnterEditMode()
+        {
+            Cell startingCell = SelectedCell;
+            PatternBuilder = new PatternBuilder(startingCell);
+        }
+
+        internal void ExitEditMode(bool applyPattern)
+        {
+            if (applyPattern)
+            {
+                PatternBuilder.Apply();
+                PatternBuilder = null;
+                // применяем
+                // заносим в usedCells это самое вот
+            }
+            else
+            {
+                PatternBuilder.Reset();
+                PatternBuilder = null;
+                // сбрасываем изменения в паттерне
+            }
+        }
+
+        private void TryConnectTo(ConsoleKey direction)
+        {
+            
+
+            switch (direction)
+            {
+                case ConsoleKey.UpArrow:
+                    // находим клетку, в которую пытается попасть игрок
+                    ConnectCells((0, -2));
+                    return;
+                case ConsoleKey.LeftArrow:
+                    ConnectCells((-2, 0));
+                    return;
+                case ConsoleKey.RightArrow:
+                    ConnectCells((2, 0));
+                    return;
+                case ConsoleKey.DownArrow:
+                    ConnectCells((0, 2));
+                    return;
+            }
+        }
+
+        private void ConnectCells((int X, int Y) moveVector)
+        {
+            var currentOffset = SelectedCell.Element.Offset;
+            Cell newCell;
+
+            // очень плохо но голова уже не варит
+            if (!IsOffsetValid(currentOffset + moveVector)) return;
+            var newOffset = currentOffset + moveVector;
+            newCell = cellMap[(newOffset.X, newOffset.Y)];
+            if (PatternBuilder!.AddToPattern(SelectedCell, newCell))
+                ChangeSelectedCell(newCell);
         }
 
         internal void TryMoveTo(ConsoleKey direction)
         {
+            if (PatternBuilder is not null)
+            {
+                TryConnectTo(direction);
+                return;
+            }
+
             var currentOffset = SelectedCell.Element.Offset;
 
             switch (direction)
@@ -104,20 +174,25 @@ namespace Pattern.Logic.Modules.Pattern
         private void ChangeSelectedCell(Position newOffset)
         {
             SelectedCell = cellMap[(newOffset.X, newOffset.Y)];
-            Console.SetCursorPosition(newOffset.X, newOffset.Y);
+        }
+        private void ChangeSelectedCell(Cell newCell)
+        {
+            SelectedCell = newCell;
         }
 
         private void GenerateCells()
         {
-            for (int x = 1; x <= 5; x += 2)
+            int count = 0;
+
+            for (int y = 1; y <= 5; y += stepBetweenCells)
             {
-                for (int y = 1; y <= 5; y += 2)
+                for (int x = 1; x <= 5; x += stepBetweenCells)
                 {
+                    count++;
                     var cellElement = new CellElement(patternBox, x, y);
+                    cellElement.Cell.Value = count;
                     patternBox.AddElement(cellElement);
                     cellMap.Add((cellElement.Offset.X, cellElement.Offset.Y), cellElement.Cell);
-
-                    //var value = (x * 3) + y + 1;
                 }
             }
 
