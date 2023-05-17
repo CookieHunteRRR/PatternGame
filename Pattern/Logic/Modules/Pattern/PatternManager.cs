@@ -18,7 +18,8 @@ namespace Pattern.Logic.Modules.Pattern
     {
         private PatternBox patternBox;
         private Dictionary<(int X, int Y), Cell> cellMap;
-        //private Cell[,] cells;
+        private int stepBetweenCells = 2; // количество рядов/столбцов между двумя клетками
+
         public Cell SelectedCell { get; set; }
 
         internal PatternManager(PatternBox box)
@@ -27,68 +28,83 @@ namespace Pattern.Logic.Modules.Pattern
             cellMap = new Dictionary<(int X, int Y), Cell>();
 
             GenerateCells();
-
-            /*patternBox
-            elements.Add(new CellElement(this, 1, 1));
-            elements.Add(new CellElement(this, 3, 1));
-            elements.Add(new CellElement(this, 5, 1));
-            elements.Add(new CellElement(this, 1, 3));
-            elements.Add(new CellElement(this, 3, 3));
-            elements.Add(new CellElement(this, 5, 3));
-            elements.Add(new CellElement(this, 1, 5));
-            elements.Add(new CellElement(this, 3, 5));
-            elements.Add(new CellElement(this, 5, 5));*/
         }
 
         internal void TryMoveTo(ConsoleKey direction)
         {
-            var patternManager = Program.GameManager.PatternBox.PatternManager;
             var currentOffset = SelectedCell.Element.Offset;
 
             switch (direction)
             {
                 case ConsoleKey.UpArrow:
-                    if (currentOffset.Y - 2 >= 1)
-                    {
-                        ChangeSelectedCell(currentOffset.X, currentOffset.Y - 2);
-                        return;
-                    }
-                    break;
+                    ChangeSelectedCell(GetAppropriateOffset(currentOffset, (0, -2)));
+                    return;
                 case ConsoleKey.LeftArrow:
-                    if (currentOffset.X - 2 >= 1)
-                    {
-                        ChangeSelectedCell(currentOffset.X - 2, currentOffset.Y);
-                        return;
-                    }
-                    break;
+                    ChangeSelectedCell(GetAppropriateOffset(currentOffset, (-2, 0)));
+                    return;
                 case ConsoleKey.RightArrow:
-                    if (currentOffset.X + 2 <= 5)
-                    {
-                        ChangeSelectedCell(currentOffset.X + 2, currentOffset.Y);
-                        return;
-                    }
-                    break;
+                    ChangeSelectedCell(GetAppropriateOffset(currentOffset, (2, 0)));
+                    return;
                 case ConsoleKey.DownArrow:
-                    if (currentOffset.Y + 2 <= 5)
-                    {
-                        ChangeSelectedCell(currentOffset.X, currentOffset.Y + 2);
-                        return;
-                    }
-                    break;
+                    ChangeSelectedCell(GetAppropriateOffset(currentOffset, (0, 2)));
+                    return;
             }
-
-            //(int X, int Y) pos = (patternBox.Position.X + SelectedCell.Element.Offset.X,
-            //                      patternBox.Position.Y + SelectedCell.Element.Offset.Y);
-            
         }
 
-        private void ChangeSelectedCell(int newX, int newY)
+        internal Position GetAppropriateOffset(Position origOffset, (int X, int Y) toWhere)
         {
-            SelectedCell = cellMap[(newX, newY)];
+            bool isMovedByX = (toWhere.X == 0) ? false : true;
+            var newOffset = new Position(origOffset.X + toWhere.X, origOffset.Y + toWhere.Y);
 
-            (int X, int Y) pos = (patternBox.Position.X + newX,
-                                  patternBox.Position.Y + newY);
-            Console.SetCursorPosition(pos.X, pos.Y);
+            if (isMovedByX) // для передвижения вправо/влево
+            {
+                // если новый оффсет выходит за рамки
+                if (!IsOffsetValid(newOffset)) return origOffset;
+                // проверяем, является ли нужная клетка не занятой
+                if (CanCellBeSelected(newOffset)) return newOffset;
+                // проверяем, является ли стоящая за нужной клетка не занятой
+                newOffset.X += toWhere.X;
+                if (CanCellBeSelected(newOffset)) return newOffset;
+                newOffset.X -= toWhere.X;
+                for (int x = newOffset.X; (x <= 5) && (x > 0); x += toWhere.X) // очень плохо
+                {
+                    for (int y = 1; y <= 5; y += stepBetweenCells)
+                    {
+                        if (y == newOffset.Y) continue;
+                        if (CanCellBeSelected((x, y))) return new Position(x, y);
+                    }
+                }
+            }
+            else // для передвижения вверх/вниз
+            {
+                if (!IsOffsetValid(newOffset)) return origOffset;
+                if (CanCellBeSelected(newOffset)) return newOffset;
+                newOffset.X += toWhere.X;
+                if (CanCellBeSelected(newOffset)) return newOffset;
+                newOffset.X -= toWhere.X;
+                /* Я все это забуду если не запишу
+                 * В первом цикле newOffset.Y т.к. мы идем вверх/вниз не с начала, а с неизвестной позиции (т.е. может быть как 1, так 3, так и 5)
+                 * Условие сложнее, т.к. опять же мы не знаем заранее, вверх мы идем или вниз, проверяем и то и другое
+                 * y += toWhere.Y, по той же причине что и с условием. toWhere.Y по сути и есть направление
+                 * Второй цикл соответственно поиск первой подходящей клетки, с пропуском того Y, по которому мы шли двумя функциями выше
+                 */
+                for (int y = newOffset.Y; (y <= 5) && (y > 0); y += toWhere.Y)
+                {
+                    for (int x = 1; x <= 5; x += stepBetweenCells)
+                    {
+                        if (x == newOffset.X) continue;
+                        if (CanCellBeSelected((x, y))) return new Position(x, y);
+                    }
+                }
+            }
+            // Если все клетки недоступны - возвращаем изначальные координаты
+            return origOffset;
+        }
+
+        private void ChangeSelectedCell(Position newOffset)
+        {
+            SelectedCell = cellMap[(newOffset.X, newOffset.Y)];
+            Console.SetCursorPosition(newOffset.X, newOffset.Y);
         }
 
         private void GenerateCells()
@@ -99,7 +115,7 @@ namespace Pattern.Logic.Modules.Pattern
                 {
                     var cellElement = new CellElement(patternBox, x, y);
                     patternBox.AddElement(cellElement);
-                    cellMap.Add(cellElement.Offset, cellElement.Cell);
+                    cellMap.Add((cellElement.Offset.X, cellElement.Offset.Y), cellElement.Cell);
 
                     //var value = (x * 3) + y + 1;
                 }
@@ -108,24 +124,25 @@ namespace Pattern.Logic.Modules.Pattern
             SelectedCell = cellMap.Values.First();
         }
 
-        /*private Cell[,] GenerateInitialArrayOfCells()
+        private bool CanCellBeSelected(Position offset)
         {
-            var arr = new Cell[3, 3];
-
-            for (int x = 0; x < 3; x++)
-            {
-                for (int y = 0; y < 3; y++)
-                {
-                    var value = (x * 3) + y + 1;
-                    var left = (y == 0) ? DirectionInfo.Wall : DirectionInfo.Free;
-                    var top = (x == 0) ? DirectionInfo.Wall : DirectionInfo.Free;
-                    var right = (y == 2) ? DirectionInfo.Wall : DirectionInfo.Free;
-                    var bottom = (x == 2) ? DirectionInfo.Wall : DirectionInfo.Free;
-                    arr[x, y] = new Cell(value, new DirectionInfo[] { left, top, right, bottom });
-                }
-            }
-
-            return arr;
-        }*/
+            if (!IsOffsetValid(offset)) return false;
+            if (cellMap[(offset.X, offset.Y)].IsUsed) return false;
+            return true;
+        }
+        private bool CanCellBeSelected((int X, int Y) offset)
+        {
+            if (!IsOffsetValid(offset)) return false;
+            if (cellMap[(offset.X, offset.Y)].IsUsed) return false;
+            return true;
+        }
+        private bool IsOffsetValid(Position offset)
+        {
+            return cellMap.ContainsKey((offset.X, offset.Y));
+        }
+        private bool IsOffsetValid((int X, int Y) offset)
+        {
+            return cellMap.ContainsKey((offset.X, offset.Y));
+        }
     }
 }

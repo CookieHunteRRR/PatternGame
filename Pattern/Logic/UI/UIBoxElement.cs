@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Pattern.Logic.Modules.Pattern;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,14 +9,14 @@ namespace Pattern.Logic.UI
 {
     internal class UIBoxElement : IDisplayable
     {
-        public (int X, int Y) Offset { get; set; }
+        public Position Offset { get; set; }
 
         protected UIBox ParentBox { get; private set; }
 
         public UIBoxElement(UIBox parentBox, int x, int y)
         {
             ParentBox = parentBox;
-            Offset = (x, y);
+            Offset = new Position(x, y);
         }
 
         public void Display()

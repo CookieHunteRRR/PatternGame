@@ -14,7 +14,8 @@ namespace Pattern.Logic.Modules.Pattern
         private int value;
         //private DirectionInfo[] defaultDirections;
 
-        public bool IsStartingPoint { get; private set; }
+        public bool IsStartingPoint { get; set; }
+        public bool IsUsed { get; set; }
         //public DirectionInfo[] Directions { get; private set; } // 0 - лево, 1 - верх, 2 - право, 3 - низ
 
 /*        internal Cell(int v, DirectionInfo[] cellInfo)
@@ -29,15 +30,32 @@ namespace Pattern.Logic.Modules.Pattern
         internal Cell(CellElement element)
         {
             Element = element;
+
+            ResetCell();
         }
 
-        internal (int X, int Y) GetConsolePosition()
+        internal void ResetCell()
+        {
+            IsStartingPoint = false;
+            IsUsed = false;
+        }
+
+        /*internal (int X, int Y) GetConsolePosition()
         {
             var patBoxPos = Program.GameManager.PatternBox.Position;
             var selCellOff = Element.Offset;
 
             return (patBoxPos.X + selCellOff.X,
                     patBoxPos.Y + selCellOff.Y);
+        }*/
+
+        internal Position GetConsolePosition()
+        {
+            var patBoxPos = Program.GameManager.PatternBox.Position;
+            var selCellOff = Element.Offset;
+
+            return new Position(patBoxPos.X + selCellOff.X,
+                                patBoxPos.Y + selCellOff.Y);
         }
 
         /*public void RestoreDefaultValues()
